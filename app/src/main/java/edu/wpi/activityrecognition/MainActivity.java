@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.MediaPlayer;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView txtActivity, txtConfidence;
     private ImageView imgActivity;
+    MediaPlayer mediaPlayer;
+    Boolean beatsPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
         imgActivity = findViewById(R.id.img_activity);
         Button btnStartTrcking = findViewById(R.id.btn_start_tracking);
         Button btnStopTracking = findViewById(R.id.btn_stop_tracking);
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.beat_02);
+        mediaPlayer.setLooping(true);
 
         btnStartTrcking.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,10 +70,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleUserActivity(int type, int confidence) {
         String label = getString(R.string.activity_unknown);
+        setDefaults();
 
         switch (type) {
             case DetectedActivity.IN_VEHICLE: {
                 label = getString(R.string.activity_in_vehicle);
+                imgActivity.setImageResource(R.drawable.in_vehicle);
                 break;
             }
             case DetectedActivity.ON_BICYCLE: {
@@ -80,10 +88,14 @@ public class MainActivity extends AppCompatActivity {
             }
             case DetectedActivity.RUNNING: {
                 label = getString(R.string.activity_running);
+                imgActivity.setImageResource(R.drawable.running);
+                playBeats();
                 break;
             }
             case DetectedActivity.STILL: {
                 label = getString(R.string.activity_still);
+                imgActivity.setImageResource(R.drawable.still);
+                //playBeats(); //Testing purpose only
                 break;
             }
             case DetectedActivity.TILTING: {
@@ -92,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
             }
             case DetectedActivity.WALKING: {
                 label = getString(R.string.activity_walking);
+                imgActivity.setImageResource(R.drawable.walking);
+                playBeats();
                 break;
             }
             case DetectedActivity.UNKNOWN: {
@@ -101,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
-
+        txtActivity.setText(label);
         if (confidence > Constants.CONFIDENCE) {
-            txtActivity.setText(label);
+//            txtActivity.setText(label);
             txtConfidence.setText("Confidence: " + confidence);
         }
     }
@@ -111,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
                 new IntentFilter(Constants.BROADCAST_DETECTED_ACTIVITY));
     }
@@ -119,8 +132,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (beatsPlaying){
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        pauseIfPlaying();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        mediaPlayer.release();
+        mediaPlayer = null;
     }
 
     private void startTracking() {
@@ -131,5 +165,24 @@ public class MainActivity extends AppCompatActivity {
     private void stopTracking() {
         Intent intent = new Intent(MainActivity.this, BackgroundDetectedActivitiesService.class);
         stopService(intent);
+
+        beatsPlaying = false;
+        pauseIfPlaying();
+    }
+    public void playBeats(){
+        mediaPlayer.start();
+        beatsPlaying = true;
+    }
+
+    public void pauseIfPlaying(){
+        if (mediaPlayer.isPlaying()){
+            mediaPlayer.pause();
+        }
+    }
+
+    public void setDefaults(){
+        pauseIfPlaying();
+        beatsPlaying = false;
+        imgActivity.setImageResource(0);
     }
 }
