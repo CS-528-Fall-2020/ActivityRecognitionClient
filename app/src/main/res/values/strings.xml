@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">ActivityRecognition</string>
+    <string name="activity_in_vehicle">You Are In Vehicle</string>
+    <string name="activity_on_bicycle">You Are On Bicycle</string>
+    <string name="activity_on_foot">You Are On Foot</string>
+    <string name="activity_running">You Are Running</string>
+    <string name="activity_still">You Are Still</string>
+    <string name="activity_tilting">You Are Tilting</string>
+    <string name="activity_walking">You Are Walking</string>
+    <string name="activity_unknown">Unknown</string>
+
+
+    <string name="stepcounter">Step Counter</string>
+    <string name="stepcounterNeil">Neil Algo Step Counter</string>
+</resources>
