@@ -40,7 +40,7 @@ public class DBManager {
     public Cursor fetchActivities() {
         String[] columns = new String[]{DatabaseHelper.CREATED_AT1, DatabaseHelper.DESC1};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME1, columns, null, null, null, null, null);
-        if (cursor != null) {
+        if (cursor.getCount() > 0) {
             cursor.moveToFirst();
         }
         return cursor;
