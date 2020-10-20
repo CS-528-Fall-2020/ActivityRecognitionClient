@@ -12,4 +12,6 @@
 
     <string name="stepcounter">Step Counter</string>
     <string name="stepcounterNeil">Neil Algo Step Counter</string>
+    <string name="geofence1">GeoFence1</string>
+    <string name="geofence2">GeoFence2</string>
 </resources>

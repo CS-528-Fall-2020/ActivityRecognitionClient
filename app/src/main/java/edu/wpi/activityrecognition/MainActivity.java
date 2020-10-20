@@ -277,6 +277,17 @@ public class MainActivity extends AppCompatActivity
     public void geoFenceTrigger(String fenceName) {
         dbManager.insertGeoFence(fenceName);
         // code to update the UI component goes here
+//        String name1 = this.getString(R.string.geofence1);
+//        String name2 = this.getString(R.string.geofence2);
+        switch(fenceName){
+            case "GeoFence1":// Fuller Labs
+                // update UI here
+                break;
+            case "GeoFence2":// Gordon Library
+                // update UI here
+                break;
+        }
+
     }
 
 
