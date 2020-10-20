@@ -25,7 +25,7 @@ import edu.wpi.activityrecognition.database.DBManager;
 import edu.wpi.activityrecognition.database.DatabaseHelper;
 
 public class MainActivity extends AppCompatActivity
-    implements StepListener, SensorEventListener {
+        implements StepListener, SensorEventListener {
     private Context mContext;
     private DBManager dbManager;
 
@@ -56,9 +56,22 @@ public class MainActivity extends AppCompatActivity
         dbManager.open();
         Cursor cursor = dbManager.fetchAllFenceCounts();
 
-        do {
-            Log.e(cursor.getString(cursor.getColumnIndex(DatabaseHelper.FENCE_NAME)), cursor.getInt(cursor.getColumnIndex(DatabaseHelper.FENCE_CNT))+"");
-        } while (cursor.moveToNext());
+        if (cursor.getCount() > 0) {
+            do {
+                Log.e(cursor.getString(cursor.getColumnIndex(DatabaseHelper.FENCE_NAME)), cursor.getInt(cursor.getColumnIndex(DatabaseHelper.FENCE_CNT)) + "");
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        Cursor cursor2 = dbManager.fetchActivities();
+
+        if (cursor2.getCount() > 0) {
+            do {
+                Log.e(cursor2.getString(cursor2.getColumnIndex(DatabaseHelper.CREATED_AT1)), cursor2.getString(cursor2.getColumnIndex(DatabaseHelper.DESC1)));
+            } while (cursor2.moveToNext());
+            cursor2.close();
+        }
+
 
         // get an instance of SensorManager
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -170,6 +183,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        dbManager = new DBManager(this);
+        dbManager.open();
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
                 new IntentFilter(Constants.BROADCAST_DETECTED_ACTIVITY));
     }
@@ -177,13 +192,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
+        dbManager.close();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (beatsPlaying){
+        if (beatsPlaying) {
             mediaPlayer.start();
         }
     }
@@ -214,18 +230,19 @@ public class MainActivity extends AppCompatActivity
         beatsPlaying = false;
         pauseIfPlaying();
     }
-    public void playBeats(){
+
+    public void playBeats() {
         mediaPlayer.start();
         beatsPlaying = true;
     }
 
-    public void pauseIfPlaying(){
-        if (mediaPlayer.isPlaying()){
+    public void pauseIfPlaying() {
+        if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         }
     }
 
-    public void setDefaults(){
+    public void setDefaults() {
         pauseIfPlaying();
         beatsPlaying = false;
         imgActivity.setImageResource(0);
@@ -233,7 +250,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             simpleStepDetector.updateAccel(sensorEvent.timestamp, sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
             neilStepDetector.updateAccel(sensorEvent.timestamp, sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
         }
@@ -247,12 +264,20 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void step(long timeNs) {
         numSteps++;
-        stepCount.setText(""+numSteps);
+        stepCount.setText("" + numSteps);
     }
 
     @Override
     public void neilStep(int updateCount) {
         numStepsNeil += updateCount;
-        stepCountNeil.setText(""+numStepsNeil);
+        stepCountNeil.setText("" + numStepsNeil);
     }
+
+    @Override
+    public void geoFenceTrigger(String fenceName) {
+        dbManager.insertGeoFence(fenceName);
+        // code to update the UI component goes here
+    }
+
+
 }

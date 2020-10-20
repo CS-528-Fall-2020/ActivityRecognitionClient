@@ -49,7 +49,7 @@ public class DBManager {
     public Cursor fetchAllFenceCounts() {
         String[] columns = new String[]{DatabaseHelper.FENCE_NAME, DatabaseHelper.FENCE_CNT};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME2, columns, null, null, null, null, null);
-        if (cursor != null) {
+        if (cursor.getCount() > 0) {
             cursor.moveToFirst();
         }
         return cursor;
@@ -68,7 +68,7 @@ public class DBManager {
         }
     }
 
-    public int fetchGeoFenceCount(String args) {
+    private int fetchGeoFenceCount(String args) {
         String[] columns = new String[]{DatabaseHelper.FENCE_CNT};
         String[] selectionArgs = new String[]{args};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME2, columns, DatabaseHelper.FENCE_NAME, selectionArgs, null, null, null, null);
