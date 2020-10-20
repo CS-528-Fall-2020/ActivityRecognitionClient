@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -20,9 +21,13 @@ import android.widget.TextView;
 
 import com.google.android.gms.location.DetectedActivity;
 
+import edu.wpi.activityrecognition.database.DBManager;
+import edu.wpi.activityrecognition.database.DatabaseHelper;
+
 public class MainActivity extends AppCompatActivity
     implements StepListener, SensorEventListener {
     private Context mContext;
+    private DBManager dbManager;
 
     private String TAG = MainActivity.class.getSimpleName();
     BroadcastReceiver broadcastReceiver;
@@ -47,6 +52,13 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         mContext = this;
+        dbManager = new DBManager(mContext);
+        dbManager.open();
+        Cursor cursor = dbManager.fetchAllFenceCounts();
+
+        do {
+            Log.e(cursor.getString(cursor.getColumnIndex(DatabaseHelper.FENCE_NAME)), cursor.getInt(cursor.getColumnIndex(DatabaseHelper.FENCE_CNT))+"");
+        } while (cursor.moveToNext());
 
         // get an instance of SensorManager
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -104,45 +116,47 @@ public class MainActivity extends AppCompatActivity
         setDefaults();
 
         switch (type) {
-            case DetectedActivity.IN_VEHICLE: {
+            case DetectedActivity.IN_VEHICLE:
                 label = getString(R.string.activity_in_vehicle);
                 imgActivity.setImageResource(R.drawable.in_vehicle);
+                dbManager.insertActivity("IN_VEHICLE");
                 break;
-            }
-            case DetectedActivity.ON_BICYCLE: {
+
+            case DetectedActivity.ON_BICYCLE:
                 label = getString(R.string.activity_on_bicycle);
+                dbManager.insertActivity("ON_BICYCLE");
                 break;
-            }
-            case DetectedActivity.ON_FOOT: {
+            case DetectedActivity.ON_FOOT:
                 label = getString(R.string.activity_on_foot);
+                dbManager.insertActivity("ON_FOOT");
                 break;
-            }
-            case DetectedActivity.RUNNING: {
+            case DetectedActivity.RUNNING:
                 label = getString(R.string.activity_running);
+                dbManager.insertActivity("RUNNING");
                 imgActivity.setImageResource(R.drawable.running);
                 playBeats();
                 break;
-            }
-            case DetectedActivity.STILL: {
+            case DetectedActivity.STILL:
                 label = getString(R.string.activity_still);
+                dbManager.insertActivity("STILL");
                 imgActivity.setImageResource(R.drawable.still);
                 //playBeats(); //Testing purpose only
                 break;
-            }
-            case DetectedActivity.TILTING: {
+
+            case DetectedActivity.TILTING:
                 label = getString(R.string.activity_tilting);
+                dbManager.insertActivity("TILTING");
+
                 break;
-            }
-            case DetectedActivity.WALKING: {
+            case DetectedActivity.WALKING:
                 label = getString(R.string.activity_walking);
+                dbManager.insertActivity("WALKING");
                 imgActivity.setImageResource(R.drawable.walking);
                 playBeats();
                 break;
-            }
-            case DetectedActivity.UNKNOWN: {
+            case DetectedActivity.UNKNOWN:
                 label = getString(R.string.activity_unknown);
                 break;
-            }
         }
 
         Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
