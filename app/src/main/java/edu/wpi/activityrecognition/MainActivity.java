@@ -84,6 +84,10 @@ public class MainActivity extends AppCompatActivity
     private int numSteps = 0;
     private int numStepsNeil = 0;
 
+    private String lastActivity = "";
+    private long start;
+    private long end;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -185,6 +189,7 @@ public class MainActivity extends AppCompatActivity
         });
 
         btnStopTracking.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
                 stopTracking();
@@ -208,48 +213,59 @@ public class MainActivity extends AppCompatActivity
     private void handleUserActivity(int type, int confidence) {
         String label = getString(R.string.activity_unknown);
         setDefaults();
+        if (confidence > Constants.CONFIDENCE) {
+            showLastActivityStats(true);
+        }
 
         switch (type) {
             case DetectedActivity.IN_VEHICLE:
                 label = getString(R.string.activity_in_vehicle);
                 imgActivity.setImageResource(R.drawable.in_vehicle);
                 dbManager.insertActivity("IN_VEHICLE");
+                lastActivity = "IN_VEHICLE";
                 break;
 
             case DetectedActivity.ON_BICYCLE:
                 label = getString(R.string.activity_on_bicycle);
                 dbManager.insertActivity("ON_BICYCLE");
+                lastActivity = "ON_BICYCLE";
                 break;
             case DetectedActivity.ON_FOOT:
                 label = getString(R.string.activity_on_foot);
                 dbManager.insertActivity("ON_FOOT");
+                lastActivity = "ON_FOOT";
                 break;
             case DetectedActivity.RUNNING:
                 label = getString(R.string.activity_running);
                 dbManager.insertActivity("RUNNING");
                 imgActivity.setImageResource(R.drawable.running);
+                lastActivity = "RUNNING";
                 playBeats();
                 break;
             case DetectedActivity.STILL:
                 label = getString(R.string.activity_still);
                 dbManager.insertActivity("STILL");
                 imgActivity.setImageResource(R.drawable.still);
+                lastActivity = "STILL";
                 //playBeats(); //Testing purpose only
                 break;
 
             case DetectedActivity.TILTING:
                 label = getString(R.string.activity_tilting);
                 dbManager.insertActivity("TILTING");
+                lastActivity = "TILTING";
 
                 break;
             case DetectedActivity.WALKING:
                 label = getString(R.string.activity_walking);
                 dbManager.insertActivity("WALKING");
                 imgActivity.setImageResource(R.drawable.walking);
+                lastActivity = "WALKING";
                 playBeats();
                 break;
             case DetectedActivity.UNKNOWN:
                 label = getString(R.string.activity_unknown);
+                lastActivity = "UNKNOWN";
                 break;
         }
 
@@ -278,6 +294,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         dbManager.close();
+        lastActivity = "";
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(geofenceReceiver);
         client.removeGeofences(getGeofenceIntent());
@@ -295,6 +312,7 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         pauseIfPlaying();
+        lastActivity = "";
     }
 
     @Override
@@ -316,6 +334,8 @@ public class MainActivity extends AppCompatActivity
 
         beatsPlaying = false;
         pauseIfPlaying();
+        showLastActivityStats(false);
+        lastActivity = "";
     }
 
     public void playBeats() {
@@ -333,6 +353,26 @@ public class MainActivity extends AppCompatActivity
         pauseIfPlaying();
         beatsPlaying = false;
         imgActivity.setImageResource(0);
+    }
+
+    public void showLastActivityStats(Boolean restart){
+        if (lastActivity != ""){
+            end = System.currentTimeMillis();
+            long time = (end - start)/1000;
+
+            String units = "";
+            long hours = time / 3600;
+            long mins = time / 60;
+            long secs = time % 60;
+
+            if (hours > 0) units += hours+"hrs";
+            if (mins > 0) units += mins+"mins";
+            if (secs > 0) units += secs+"secs";
+            Toast.makeText(getApplicationContext(), lastActivity +" lasted for "+ units, Toast.LENGTH_SHORT).show();
+        }
+        if (restart) {
+            start = System.currentTimeMillis();
+        }
     }
 
     @Override
