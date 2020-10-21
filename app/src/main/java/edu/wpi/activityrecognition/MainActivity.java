@@ -17,6 +17,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -138,20 +139,22 @@ public class MainActivity extends AppCompatActivity
         //Get the map information
         counts.put(Constants.FULLER_LABS, (TextView) findViewById(R.id.geo_fence_1_count));
         counts.put(Constants.GORDON_LIBRARY, (TextView) findViewById(R.id.geo_fence_2_count));
-        for(Map.Entry<String, TextView> entry : counts.entrySet()) {
-            entry.getValue().setText(dbManager.fetchGeoFenceCount(entry.getKey()));
+        for (Map.Entry<String, TextView> entry : counts.entrySet()) {
+            entry.getValue().setText("" + (dbManager.fetchGeoFenceCount(entry.getKey())));
         }
         address = findViewById(R.id.current_address);
         ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
         client = LocationServices.getGeofencingClient(this);
         geofences.add(new Geofence.Builder()
-            .setRequestId(Constants.FULLER_LABS)
-            .setCircularRegion(42.275010, -71.806408, 35.0f)
-            .setLoiteringDelay(15000)
-            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-            .build());
+                .setRequestId(Constants.FULLER_LABS)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setCircularRegion(42.275010, -71.806408, 35.0f)
+                .setLoiteringDelay(15000)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .build());
         geofences.add(new Geofence.Builder()
                 .setRequestId(Constants.GORDON_LIBRARY)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setCircularRegion(42.274231, -71.806383, 32.0f)
                 .setLoiteringDelay(15000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
@@ -159,7 +162,7 @@ public class MainActivity extends AppCompatActivity
         geofenceReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction().equals(Constants.BROADCAST_GEOFENCE)) {
+                if (intent.getAction().equals(Constants.BROADCAST_GEOFENCE)) {
                     GeofencingEvent event = GeofencingEvent.fromIntent(intent);
                     if (event.hasError()) {
                         String errorMessage = GeofenceStatusCodes
@@ -325,7 +328,11 @@ public class MainActivity extends AppCompatActivity
 
     private void startTracking() {
         Intent intent = new Intent(MainActivity.this, BackgroundDetectedActivitiesService.class);
-        startService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
     }
 
     private void stopTracking() {
@@ -355,20 +362,20 @@ public class MainActivity extends AppCompatActivity
         imgActivity.setImageResource(0);
     }
 
-    public void showLastActivityStats(Boolean restart){
-        if (lastActivity != ""){
+    public void showLastActivityStats(Boolean restart) {
+        if (lastActivity != "") {
             end = System.currentTimeMillis();
-            long time = (end - start)/1000;
+            long time = (end - start) / 1000;
 
             String units = "";
             long hours = time / 3600;
             long mins = time / 60;
             long secs = time % 60;
 
-            if (hours > 0) units += hours+"hrs";
-            if (mins > 0) units += mins+"mins";
-            if (secs > 0) units += secs+"secs";
-            Toast.makeText(getApplicationContext(), lastActivity +" lasted for "+ units, Toast.LENGTH_SHORT).show();
+            if (hours > 0) units += hours + "hrs";
+            if (mins > 0) units += mins + "mins";
+            if (secs > 0) units += secs + "secs";
+            Toast.makeText(getApplicationContext(), lastActivity + " lasted for " + units, Toast.LENGTH_SHORT).show();
         }
         if (restart) {
             start = System.currentTimeMillis();
@@ -418,7 +425,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressLint("MissingPermission")
     private void setupMap() {
-        if(map != null) {
+        if (map != null) {
             geocoder = new Geocoder(this);
             map.setMyLocationEnabled(true);
             map.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
@@ -446,7 +453,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private PendingIntent getGeofenceIntent() {
-        if(geofenceIntent != null) return geofenceIntent;
+        if (geofenceIntent != null) return geofenceIntent;
         Intent intent = new Intent(Constants.BROADCAST_GEOFENCE);
         geofenceIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return geofenceIntent;
@@ -454,9 +461,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == 1001) {
-            for(int i : grantResults) {
-                if(i == PackageManager.PERMISSION_DENIED) throw new RuntimeException("Couldn't get the valid permissions");
+        if (requestCode == 1001) {
+            for (int i : grantResults) {
+                if (i == PackageManager.PERMISSION_DENIED)
+                    throw new RuntimeException("Couldn't get the valid permissions");
             }
             setupMap();
         }

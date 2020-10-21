@@ -73,9 +73,9 @@ public class DBManager {
     public int fetchGeoFenceCount(String args) {
         String[] columns = new String[]{DatabaseHelper.FENCE_CNT};
         String[] selectionArgs = new String[]{args};
-        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME2, columns, DatabaseHelper.FENCE_NAME, selectionArgs, null, null, null, null);
+        Cursor cursor = database.query(DatabaseHelper.TABLE_NAME2, columns, DatabaseHelper.FENCE_NAME+ "=?", selectionArgs, null, null, null, null);
         int count = 0;
-        if (cursor != null) {
+        if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             count = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.FENCE_CNT));
             cursor.close();
