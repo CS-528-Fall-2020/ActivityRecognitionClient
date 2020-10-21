@@ -28,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.DetectedActivity;
@@ -184,28 +185,28 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void handleUserActivity(int type, int confidence) {
         String label = getString(R.string.activity_unknown);
-        setDefaults();
         if (confidence > Constants.CONFIDENCE && type != this.type) {
+            setDefaults();
             this.type = type;
             showLastActivityStats(true);
             switch (type) {
                 case DetectedActivity.IN_VEHICLE:
                     label = getString(R.string.activity_in_vehicle);
-                    imgActivity.setImageResource(R.drawable.in_vehicle);
+                    imgActivity.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.in_vehicle));
                     dbManager.insertActivity("IN_VEHICLE");
                     lastActivity = "IN_VEHICLE";
                     break;
 
-                case DetectedActivity.ON_BICYCLE:
-                    label = getString(R.string.activity_on_bicycle);
-                    dbManager.insertActivity("ON_BICYCLE");
-                    lastActivity = "ON_BICYCLE";
-                    break;
-                case DetectedActivity.ON_FOOT:
-                    label = getString(R.string.activity_on_foot);
-                    dbManager.insertActivity("ON_FOOT");
-                    lastActivity = "ON_FOOT";
-                    break;
+//                case DetectedActivity.ON_BICYCLE:
+//                    label = getString(R.string.activity_on_bicycle);
+//                    dbManager.insertActivity("ON_BICYCLE");
+//                    lastActivity = "ON_BICYCLE";
+//                    break;
+//                case DetectedActivity.ON_FOOT:
+//                    label = getString(R.string.activity_on_foot);
+//                    dbManager.insertActivity("ON_FOOT");
+//                    lastActivity = "ON_FOOT";
+//                    break;
                 case DetectedActivity.RUNNING:
                     label = getString(R.string.activity_running);
                     dbManager.insertActivity("RUNNING");
@@ -216,26 +217,27 @@ public class MainActivity extends AppCompatActivity
                 case DetectedActivity.STILL:
                     label = getString(R.string.activity_still);
                     dbManager.insertActivity("STILL");
-                    imgActivity.setImageResource(R.drawable.still);
+                    imgActivity.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.still));
                     lastActivity = "STILL";
                     //playBeats(); //Testing purpose only
                     break;
 
-                case DetectedActivity.TILTING:
-                    label = getString(R.string.activity_tilting);
-                    dbManager.insertActivity("TILTING");
-                    lastActivity = "TILTING";
-
-                    break;
+//                case DetectedActivity.TILTING:
+//                    label = getString(R.string.activity_tilting);
+//                    dbManager.insertActivity("TILTING");
+//                    lastActivity = "TILTING";
+//
+//                    break;
                 case DetectedActivity.WALKING:
                     label = getString(R.string.activity_walking);
                     dbManager.insertActivity("WALKING");
-                    imgActivity.setImageResource(R.drawable.walking);
+                    imgActivity.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.walking));
                     lastActivity = "WALKING";
                     playBeats();
                     break;
                 case DetectedActivity.UNKNOWN:
                     label = getString(R.string.activity_unknown);
+                    imgActivity.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.unknown));
                     lastActivity = "UNKNOWN";
                     break;
             }

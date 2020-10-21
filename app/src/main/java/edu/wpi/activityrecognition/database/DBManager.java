@@ -32,7 +32,7 @@ public class DBManager {
 
     public void insertActivity(String desc) {
         ContentValues contentValue = new ContentValues();
-        String date = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new java.util.Date());
+        String date = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSSZ").format(new java.util.Date());
         contentValue.put(DatabaseHelper.CREATED_AT1, date);
         contentValue.put(DatabaseHelper.DESC1, desc);
         database.insert(DatabaseHelper.TABLE_NAME1, null, contentValue);

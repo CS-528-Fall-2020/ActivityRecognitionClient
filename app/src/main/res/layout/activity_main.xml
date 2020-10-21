@@ -177,9 +177,11 @@
             android:id="@+id/img_activity"
             android:layout_width="200dp"
             android:layout_height="200dp"
-            android:background="#0E0E0E"
+            android:background="#eeee"
             android:cropToPadding="true"
             android:scaleType="centerInside"
+            android:src="@drawable/unknown"
+            android:adjustViewBounds="true"
             />
 
         <TextView
