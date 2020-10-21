@@ -3,7 +3,6 @@ package edu.wpi.activityrecognition;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -33,9 +32,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingClient;
-import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -53,6 +50,7 @@ import java.util.Map;
 
 import edu.wpi.activityrecognition.database.DBManager;
 import edu.wpi.activityrecognition.database.DatabaseHelper;
+import edu.wpi.activityrecognition.database.MyBroadcastReceiver;
 
 public class MainActivity extends AppCompatActivity
         implements StepListener, SensorEventListener, OnMapReadyCallback {
@@ -60,7 +58,6 @@ public class MainActivity extends AppCompatActivity
     private DBManager dbManager;
 
     private String TAG = MainActivity.class.getSimpleName();
-    BroadcastReceiver broadcastReceiver;
 
     private TextView txtActivity, txtConfidence;
     private ImageView imgActivity;
@@ -74,7 +71,7 @@ public class MainActivity extends AppCompatActivity
     private GeofencingClient client;
     private List<Geofence> geofences = new ArrayList<>();
     private PendingIntent geofenceIntent;
-    private BroadcastReceiver geofenceReceiver;
+    private MyBroadcastReceiver myBroadcastReceiver;
 
     private TextView stepCount;
     private TextView stepCountNeil;
@@ -133,6 +130,7 @@ public class MainActivity extends AppCompatActivity
         txtActivity = findViewById(R.id.txt_activity);
         txtConfidence = findViewById(R.id.txt_confidence);
         imgActivity = findViewById(R.id.img_activity);
+
         Button btnStartTrcking = findViewById(R.id.btn_start_tracking);
         Button btnStopTracking = findViewById(R.id.btn_stop_tracking);
 
@@ -159,27 +157,7 @@ public class MainActivity extends AppCompatActivity
                 .setLoiteringDelay(15000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
                 .build());
-        geofenceReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(Constants.BROADCAST_GEOFENCE)) {
-                    GeofencingEvent event = GeofencingEvent.fromIntent(intent);
-                    if (event.hasError()) {
-                        String errorMessage = GeofenceStatusCodes
-                                .getStatusCodeString(event.getErrorCode());
-                        Log.e(TAG, errorMessage);
-                        return;
-                    }
-                    int transition = event.getGeofenceTransition();
-                    if (transition == Geofence.GEOFENCE_TRANSITION_DWELL) {
-                        List<Geofence> triggered = event.getTriggeringGeofences();
-                        for (Geofence fence : triggered) {
-                            geoFenceTrigger(fence.getRequestId());
-                        }
-                    }
-                }
-            }
-        };
+        myBroadcastReceiver = new MyBroadcastReceiver(this);
 
         mediaPlayer = MediaPlayer.create(this, R.raw.beat_02);
         mediaPlayer.setLooping(true);
@@ -199,83 +177,71 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(Constants.BROADCAST_DETECTED_ACTIVITY)) {
-                    int type = intent.getIntExtra("type", -1);
-                    int confidence = intent.getIntExtra("confidence", 0);
-                    handleUserActivity(type, confidence);
-                }
-            }
-        };
-
         startTracking();
     }
 
-    private void handleUserActivity(int type, int confidence) {
+    private static int type = -1;
+    @Override
+    public void handleUserActivity(int type, int confidence) {
         String label = getString(R.string.activity_unknown);
         setDefaults();
-        if (confidence > Constants.CONFIDENCE) {
+        if (confidence > Constants.CONFIDENCE && type != this.type) {
+            this.type = type;
             showLastActivityStats(true);
-        }
+            switch (type) {
+                case DetectedActivity.IN_VEHICLE:
+                    label = getString(R.string.activity_in_vehicle);
+                    imgActivity.setImageResource(R.drawable.in_vehicle);
+                    dbManager.insertActivity("IN_VEHICLE");
+                    lastActivity = "IN_VEHICLE";
+                    break;
 
-        switch (type) {
-            case DetectedActivity.IN_VEHICLE:
-                label = getString(R.string.activity_in_vehicle);
-                imgActivity.setImageResource(R.drawable.in_vehicle);
-                dbManager.insertActivity("IN_VEHICLE");
-                lastActivity = "IN_VEHICLE";
-                break;
+                case DetectedActivity.ON_BICYCLE:
+                    label = getString(R.string.activity_on_bicycle);
+                    dbManager.insertActivity("ON_BICYCLE");
+                    lastActivity = "ON_BICYCLE";
+                    break;
+                case DetectedActivity.ON_FOOT:
+                    label = getString(R.string.activity_on_foot);
+                    dbManager.insertActivity("ON_FOOT");
+                    lastActivity = "ON_FOOT";
+                    break;
+                case DetectedActivity.RUNNING:
+                    label = getString(R.string.activity_running);
+                    dbManager.insertActivity("RUNNING");
+                    imgActivity.setImageResource(R.drawable.running);
+                    lastActivity = "RUNNING";
+                    playBeats();
+                    break;
+                case DetectedActivity.STILL:
+                    label = getString(R.string.activity_still);
+                    dbManager.insertActivity("STILL");
+                    imgActivity.setImageResource(R.drawable.still);
+                    lastActivity = "STILL";
+                    //playBeats(); //Testing purpose only
+                    break;
 
-            case DetectedActivity.ON_BICYCLE:
-                label = getString(R.string.activity_on_bicycle);
-                dbManager.insertActivity("ON_BICYCLE");
-                lastActivity = "ON_BICYCLE";
-                break;
-            case DetectedActivity.ON_FOOT:
-                label = getString(R.string.activity_on_foot);
-                dbManager.insertActivity("ON_FOOT");
-                lastActivity = "ON_FOOT";
-                break;
-            case DetectedActivity.RUNNING:
-                label = getString(R.string.activity_running);
-                dbManager.insertActivity("RUNNING");
-                imgActivity.setImageResource(R.drawable.running);
-                lastActivity = "RUNNING";
-                playBeats();
-                break;
-            case DetectedActivity.STILL:
-                label = getString(R.string.activity_still);
-                dbManager.insertActivity("STILL");
-                imgActivity.setImageResource(R.drawable.still);
-                lastActivity = "STILL";
-                //playBeats(); //Testing purpose only
-                break;
+                case DetectedActivity.TILTING:
+                    label = getString(R.string.activity_tilting);
+                    dbManager.insertActivity("TILTING");
+                    lastActivity = "TILTING";
 
-            case DetectedActivity.TILTING:
-                label = getString(R.string.activity_tilting);
-                dbManager.insertActivity("TILTING");
-                lastActivity = "TILTING";
+                    break;
+                case DetectedActivity.WALKING:
+                    label = getString(R.string.activity_walking);
+                    dbManager.insertActivity("WALKING");
+                    imgActivity.setImageResource(R.drawable.walking);
+                    lastActivity = "WALKING";
+                    playBeats();
+                    break;
+                case DetectedActivity.UNKNOWN:
+                    label = getString(R.string.activity_unknown);
+                    lastActivity = "UNKNOWN";
+                    break;
+            }
 
-                break;
-            case DetectedActivity.WALKING:
-                label = getString(R.string.activity_walking);
-                dbManager.insertActivity("WALKING");
-                imgActivity.setImageResource(R.drawable.walking);
-                lastActivity = "WALKING";
-                playBeats();
-                break;
-            case DetectedActivity.UNKNOWN:
-                label = getString(R.string.activity_unknown);
-                lastActivity = "UNKNOWN";
-                break;
-        }
-
-        Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
-        txtActivity.setText(label);
-        if (confidence > Constants.CONFIDENCE) {
-//            txtActivity.setText(label);
+            Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
+            txtActivity.setText(label);
             txtConfidence.setText("Confidence: " + confidence);
         }
     }
@@ -286,10 +252,10 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         dbManager = new DBManager(this);
         dbManager.open();
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
-                new IntentFilter(Constants.BROADCAST_DETECTED_ACTIVITY));
-        LocalBroadcastManager.getInstance(this).registerReceiver(geofenceReceiver,
-                new IntentFilter(Constants.BROADCAST_GEOFENCE));
+        IntentFilter filters = new IntentFilter();
+        filters.addAction(Constants.BROADCAST_DETECTED_ACTIVITY);
+        filters.addAction(Constants.BROADCAST_GEOFENCE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, filters);
         client.addGeofences(getGeofencingRequest(), getGeofenceIntent());
     }
 
@@ -298,8 +264,7 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         dbManager.close();
         lastActivity = "";
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(geofenceReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
         client.removeGeofences(getGeofenceIntent());
     }
 
@@ -338,6 +303,7 @@ public class MainActivity extends AppCompatActivity
     private void stopTracking() {
         Intent intent = new Intent(MainActivity.this, BackgroundDetectedActivitiesService.class);
         stopService(intent);
+        type = -1;
 
         beatsPlaying = false;
         pauseIfPlaying();
