@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 
@@ -55,7 +56,7 @@ public class DBManager {
         return cursor;
     }
 
-    public void insertGeoFence(String fenceName) {
+    public void insertGeoFence(String fenceName, TextView view) {
         ContentValues contentValue = new ContentValues();
         int fenceCount = fetchGeoFenceCount(fenceName);
         if (fenceCount == 0) {
@@ -66,9 +67,10 @@ public class DBManager {
             contentValue.put(DatabaseHelper.FENCE_CNT, fenceCount++);
             database.update(DatabaseHelper.TABLE_NAME2, contentValue, DatabaseHelper.FENCE_NAME + "=" + fenceName, null);
         }
+        view.setText(fenceCount);
     }
 
-    private int fetchGeoFenceCount(String args) {
+    public int fetchGeoFenceCount(String args) {
         String[] columns = new String[]{DatabaseHelper.FENCE_CNT};
         String[] selectionArgs = new String[]{args};
         Cursor cursor = database.query(DatabaseHelper.TABLE_NAME2, columns, DatabaseHelper.FENCE_NAME, selectionArgs, null, null, null, null);

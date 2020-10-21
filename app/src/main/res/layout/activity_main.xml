@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -15,17 +17,16 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content">
 
             <TextView
                 android:id="@+id/step_counter_text_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:gravity="center_horizontal"
                 android:text="@string/stepcounter"
-                android:textAlignment="center"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/step_counter_count"
@@ -34,11 +35,12 @@
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:layout_weight="1"
-                android:textAlignment="center"
+                android:gravity="center_horizontal"
                 android:text="0"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -49,9 +51,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_weight="1"
+                android:gravity="center_horizontal"
                 android:text="@string/stepcounterNeil"
-                android:textAlignment="center"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/step_counter_count_neil"
@@ -61,11 +63,12 @@
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="8dp"
                 android:layout_weight="1"
-                android:textAlignment="center"
+                android:gravity="center_horizontal"
                 android:text="0"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -76,9 +79,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_weight="1"
+                android:gravity="center_horizontal"
                 android:text="Geo Fence 1: Fuller Labs"
-                android:textAlignment="center"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/geo_fence_1_count"
@@ -88,14 +91,15 @@
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="8dp"
                 android:layout_weight="1"
-                android:textAlignment="center"
+                android:gravity="center_horizontal"
                 android:text="0"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/geo_fence_2"
@@ -103,9 +107,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_weight="1"
+                android:gravity="center_horizontal"
                 android:text="Geo Fence 2: Gordon Library"
-                android:textAlignment="center"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/geo_fence_2_count"
@@ -115,9 +119,36 @@
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="8dp"
                 android:layout_weight="1"
-                android:textAlignment="center"
+                android:gravity="center_horizontal"
                 android:text="0"
-                android:gravity="center_horizontal" />
+                android:textAlignment="center" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/address_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:text="Address"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/current_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:textAlignment="center" />
 
         </LinearLayout>
 
@@ -129,6 +160,13 @@
         android:orientation="vertical"
         android:layout_weight="1"
         android:gravity="center_horizontal|center_vertical">
+
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            tools:context=".MapsActivity" />
 
         <ImageView
             android:id="@+id/img_activity"
